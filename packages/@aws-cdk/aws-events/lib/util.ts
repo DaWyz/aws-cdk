@@ -1,3 +1,5 @@
+import { EventFilter } from './event-filter';
+
 /**
  * Merge the `src` event pattern into the `dest` event pattern by adding all
  * values from `src` into the fields in `dest`.
@@ -7,9 +9,42 @@
 export function mergeEventPattern(dest: any, src: any) {
   dest = dest || { };
 
-  mergeObject(dest, src);
+  mergeObject(formatObject(dest), formatObject(src));
 
   return dest;
+
+  function transformValue(value: EventFilter | any) {
+    if (value instanceof EventFilter) {
+      return value.conditions;
+    }
+
+    return value;
+  }
+
+  function formatObject(obj: any) {
+    for (const [field, value] of Object.entries(obj)) {
+      if (value instanceof EventFilter) {
+        obj[field] = value.conditions;
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        let filters = [];
+        for (let filter of value) {
+          filters.push(transformValue(filter));
+        }
+
+        obj[field] = value;
+        continue;
+      }
+
+      if (typeof(value) === 'object') {
+        obj[field] = formatObject(value);
+      }
+    }
+
+    return obj;
+  }
 
   function mergeObject(destObj: any, srcObj: any) {
     if (typeof(srcObj) !== 'object') {
@@ -17,7 +52,6 @@ export function mergeEventPattern(dest: any, src: any) {
     }
 
     for (const field of Object.keys(srcObj)) {
-
       const srcValue = srcObj[field];
       const destValue = destObj[field];
 

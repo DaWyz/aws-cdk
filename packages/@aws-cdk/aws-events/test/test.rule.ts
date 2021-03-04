@@ -2,7 +2,7 @@ import { expect, haveResource, haveResourceLike } from '@aws-cdk/assert';
 import * as iam from '@aws-cdk/aws-iam';
 import * as cdk from '@aws-cdk/core';
 import { Test } from 'nodeunit';
-import { EventBus, EventField, IRule, IRuleTarget, RuleTargetConfig, RuleTargetInput, Schedule } from '../lib';
+import { EventBus, EventField, EventFilter, IRule, IRuleTarget, RuleTargetConfig, RuleTargetInput, Schedule } from '../lib';
 import { Rule } from '../lib/rule';
 
 /* eslint-disable quote-props */
@@ -762,6 +762,71 @@ export = {
         ],
       }));
 
+      test.done();
+    },
+
+    'with filter policy'(test: Test) {
+      // GIVEN
+      const stack = new cdk.Stack();
+
+      // WHEN
+      const rule = new Rule(stack, 'Rule', {
+        eventPattern: {
+          source: EventFilter.stringFilter({
+            whitelist: ['aws.ec2', 'aws.sns'],
+            blacklist: ['aws.sqs', 'aws.s3'],
+            matchPrefixes: ['aws'],
+          }),
+          detail: {
+            price: EventFilter.numericFilter({
+              whitelist: [100, 200],
+              between: { start: 300, stop: 350 },
+              greaterThan: 500,
+              lessThan: 1000,
+              betweenStrict: { start: 2000, stop: 3000 },
+              greaterThanOrEqualTo: 1000,
+              lessThanOrEqualTo: -2,
+            }),
+          },
+        },
+      });
+
+      rule.addEventPattern({
+        source: EventFilter.stringFilter({
+          whitelist: ['aws.events'],
+          blacklist: ['aws.blabla'],
+        }),
+      });
+
+      // THEN
+      expect(stack).to(haveResource('AWS::Events::Rule', {
+        EventPattern: {
+          source: [
+            'aws.ec2',
+            'aws.sns',
+            { 'anything-but': ['aws.sqs', 'aws.s3'] },
+            { prefix: 'aws' },
+            'aws.events',
+            {
+              'anything-but': [
+                'aws.blabla',
+              ],
+            },
+          ],
+          detail: {
+            price: [
+              { numeric: ['=', 100] },
+              { numeric: ['=', 200] },
+              { numeric: ['>', 500] },
+              { numeric: ['>=', 1000] },
+              { numeric: ['<', 1000] },
+              { numeric: ['<=', -2] },
+              { numeric: ['>=', 300, '<=', 350] },
+              { numeric: ['>', 2000, '<', 3000] },
+            ],
+          },
+        },
+      }));
       test.done();
     },
   },

@@ -1,3 +1,5 @@
+import { EventFilter } from './event-filter';
+
 /**
  * Events in Amazon CloudWatch Events are represented as JSON objects. For more
  * information about JSON objects, see RFC 7159.
@@ -33,7 +35,7 @@ export interface EventPattern {
    *
    * @default - No filtering on version
    */
-  readonly version?: string[];
+  readonly version?: string[] | EventFilter;
 
   /**
    * A unique value is generated for every event. This can be helpful in
@@ -41,7 +43,7 @@ export interface EventPattern {
    *
    * @default - No filtering on id
    */
-  readonly id?: string[];
+  readonly id?: string[] | EventFilter;
 
   /**
    * Identifies, in combination with the source field, the fields and values
@@ -51,7 +53,7 @@ export interface EventPattern {
    *
    * @default - No filtering on detail type
    */
-  readonly detailType?: string[];
+  readonly detailType?: string[] | EventFilter;
 
   /**
    * Identifies the service that sourced the event. All events sourced from
@@ -66,14 +68,14 @@ export interface EventPattern {
    * @see http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces
    * @default - No filtering on source
    */
-  readonly source?: string[];
+  readonly source?: string[] | EventFilter;
 
   /**
    * The 12-digit number identifying an AWS account.
    *
    * @default - No filtering on account
    */
-  readonly account?: string[];
+  readonly account?: string[] | EventFilter;
 
   /**
    * The event timestamp, which can be specified by the service originating
@@ -83,14 +85,14 @@ export interface EventPattern {
    *
    * @default - No filtering on time
    */
-  readonly time?: string[];
+  readonly time?: string[] | EventFilter;
 
   /**
    * Identifies the AWS region where the event originated.
    *
    * @default - No filtering on region
    */
-  readonly region?: string[];
+  readonly region?: string[] | EventFilter;
 
   /**
    * This JSON array contains ARNs that identify resources that are involved
@@ -104,7 +106,7 @@ export interface EventPattern {
    *
    * @default - No filtering on resource
    */
-  readonly resources?: string[];
+  readonly resources?: string[] | EventFilter;
 
   /**
    * A JSON object, whose content is at the discretion of the service
@@ -112,5 +114,5 @@ export interface EventPattern {
    *
    * @default - No filtering on detail
    */
-  readonly detail?: {[key: string]: any};
+  readonly detail?: { [key: string]: any };
 }
